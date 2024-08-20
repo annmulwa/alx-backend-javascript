@@ -7,51 +7,50 @@ const app = http.createServer();
 const DB_FILE = process.argv.length > 2 ? process.argv[2] : '';
 
 /**
- * Counts the students in a CSV data file.
- * @param {String} dataPath The path to the CSV data file.
- * @author Bezaleel Olakunori <https://github.com/B3zaleel>
+ * Create a more complex HTTP
+ * server using Node's HTTP module
  */
-const countStudents = (dataPath) => new Promise((resolve, reject) => {
-  if (!dataPath) {
+const countStudents = (Path) => new Promise((resolve, reject) => {
+  if (!Path) {
     reject(new Error('Cannot load the database'));
   }
-  if (dataPath) {
-    fs.readFile(dataPath, (err, data) => {
+  if (Path) {
+    fs.readFile(Path, (err, data) => {
       if (err) {
         reject(new Error('Cannot load the database'));
       }
       if (data) {
         const reportParts = [];
-        const fileLines = data.toString('utf-8').trim().split('\n');
-        const studentGroups = {};
-        const dbFieldNames = fileLines[0].split(',');
-        const studentPropNames = dbFieldNames.slice(
+        const filelines = data.toString('utf-8').trim().split('\n');
+        const students = {};
+        const dbFields = filelines[0].split(',');
+        const studentPropNames = dbFields.slice(
           0,
-          dbFieldNames.length - 1,
+          dbFields.length - 1,
         );
 
-        for (const line of fileLines.slice(1)) {
+        for (const line of filelines.slice(1)) {
           const studentRecord = line.split(',');
           const studentPropValues = studentRecord.slice(
             0,
             studentRecord.length - 1,
           );
           const field = studentRecord[studentRecord.length - 1];
-          if (!Object.keys(studentGroups).includes(field)) {
-            studentGroups[field] = [];
+          if (!Object.keys(students).includes(field)) {
+            students[field] = [];
           }
           const studentEntries = studentPropNames.map((propName, idx) => [
             propName,
             studentPropValues[idx],
           ]);
-          studentGroups[field].push(Object.fromEntries(studentEntries));
+          students[field].push(Object.fromEntries(studentEntries));
         }
 
-        const totalStudents = Object.values(studentGroups).reduce(
+        const totalStudents = Object.values(students).reduce(
           (pre, cur) => (pre || []).length + cur.length,
         );
         reportParts.push(`Number of students: ${totalStudents}`);
-        for (const [field, group] of Object.entries(studentGroups)) {
+        for (const [field, group] of Object.entries(students)) {
           reportParts.push([
             `Number of students in ${field}: ${group.length}.`,
             'List:',
@@ -68,12 +67,12 @@ const SERVER_ROUTE_HANDLERS = [
   {
     route: '/',
     handler(_, res) {
-      const responseText = 'Hello Holberton School!';
+      const response = 'Hello Holberton School!';
 
       res.setHeader('Content-Type', 'text/plain');
-      res.setHeader('Content-Length', responseText.length);
+      res.setHeader('Content-Length', response.length);
       res.statusCode = 200;
-      res.write(Buffer.from(responseText));
+      res.write(Buffer.from(response));
     },
   },
   {
@@ -84,19 +83,19 @@ const SERVER_ROUTE_HANDLERS = [
       countStudents(DB_FILE)
         .then((report) => {
           responseParts.push(report);
-          const responseText = responseParts.join('\n');
+          const response = responseParts.join('\n');
           res.setHeader('Content-Type', 'text/plain');
-          res.setHeader('Content-Length', responseText.length);
+          res.setHeader('Content-Length', response.length);
           res.statusCode = 200;
-          res.write(Buffer.from(responseText));
+          res.write(Buffer.from(response));
         })
         .catch((err) => {
           responseParts.push(err instanceof Error ? err.message : err.toString());
-          const responseText = responseParts.join('\n');
+          const response = responseParts.join('\n');
           res.setHeader('Content-Type', 'text/plain');
-          res.setHeader('Content-Length', responseText.length);
+          res.setHeader('Content-Length', response.length);
           res.statusCode = 200;
-          res.write(Buffer.from(responseText));
+          res.write(Buffer.from(response));
         });
     },
   },
